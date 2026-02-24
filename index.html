@@ -105,12 +105,12 @@
 
 <script>
     // ==========================================
-    // PUT YOUR SUPABASE URL AND KEY HERE
+    // YOUR SUPABASE CONNECTION
     // ==========================================
-    const SUPABASE_URL = 'https://tkspckewwviwxjlyrdxo.supabaseClient.co';
+    const SUPABASE_URL = 'https://tkspckewwviwxjlyrdxo.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrc3Bja2V3d3Zpd3hqbHlyZHhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MTQzMTEsImV4cCI6MjA4NzQ5MDMxMX0.YEAKicveHDbUBCRTWJg_J3zmOSIKArNKdflntgV0F_U';
     
-    // We named this supabaseClientClient to avoid naming collisions!
+    // We named this supabaseClient to avoid naming collisions!
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     const MAX_PITY = 1095;
@@ -209,7 +209,7 @@
 
     async function logout() {
         await supabaseClient.auth.signOut();
-        location.reload(); // Quick reset of the UI state
+        location.reload(); 
     }
 
     // --- App Init ---
@@ -292,7 +292,7 @@
     async function loadLeaderboard() {
         const board = document.getElementById('leaderboardLog');
         board.innerHTML = "Fetching global despair data...";
-        // Pull top 10 users with the highest pity
+        
         let { data: users, error } = await supabaseClient.from('gacha_data').select('email, pity').order('pity', { ascending: false }).limit(10);
         
         if (error) return board.innerHTML = "Failed to load leaderboard.";
@@ -300,7 +300,6 @@
         
         board.innerHTML = users.map((u, i) => {
             let name = u.email.split('@')[0];
-            // Hide part of the email for privacy on the global board
             let display = name.substring(0, 3) + "***"; 
             if(u.email === userData.email) display = `<span style="color:#4ade80">${name} (You)</span>`;
             return `<div class="log-entry"><span>#${i+1} ${display}</span> <span style="color:#e94560">${u.pity} Pity</span></div>`;
