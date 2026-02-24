@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>The Crush Gacha: Live Edition</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabaseClient/supabaseClient-js@2"></script>
 <style>
     :root { --bg-color: #1a1a2e; }
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; background-color: var(--bg-color); color: #e94560; margin: 0; padding: 20px; box-sizing: border-box; transition: background-color 1s ease; }
@@ -107,11 +107,11 @@
     // ==========================================
     // PUT YOUR SUPABASE URL AND KEY HERE
     // ==========================================
-    const SUPABASE_URL = 'https://tkspckewwviwxjlyrdxo.supabase.co';
+    const SUPABASE_URL = 'https://tkspckewwviwxjlyrdxo.supabaseClient.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRrc3Bja2V3d3Zpd3hqbHlyZHhvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE5MTQzMTEsImV4cCI6MjA4NzQ5MDMxMX0.YEAKicveHDbUBCRTWJg_J3zmOSIKArNKdflntgV0F_U';
     
-    // We named this supabaseClient to avoid naming collisions!
-    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    // We named this supabaseClientClient to avoid naming collisions!
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     const MAX_PITY = 1095;
     const SOFT_PITY_START = 700;
@@ -160,8 +160,8 @@
         msg.innerText = "Connecting to universe...";
         
         let authRes;
-        if(type === 'signup') authRes = await supabase.auth.signUp({ email, password });
-        else authRes = await supabase.auth.signInWithPassword({ email, password });
+        if(type === 'signup') authRes = await supabaseClient.auth.signUp({ email, password });
+        else authRes = await supabaseClient.auth.signInWithPassword({ email, password });
 
         if(authRes.error) return msg.innerText = authRes.error.message;
         
@@ -169,12 +169,12 @@
         userData.email = authRes.data.user.email;
 
         // Fetch or create profile
-        let { data: profile, error } = await supabase.from('gacha_data').select('*').eq('id', userAuthId).single();
+        let { data: profile, error } = await supabaseClient.from('gacha_data').select('*').eq('id', userAuthId).single();
         
         if (!profile) {
             // New User Setup
             profile = { id: userAuthId, email: userData.email, hopium: 160, pity: 0, crush_type: null, quest_date: new Date().toDateString(), completed_quests: {}, history: [] };
-            await supabase.from('gacha_data').insert([profile]);
+            await supabaseClient.from('gacha_data').insert([profile]);
         }
 
         // Map DB snake_case to JS camelCase
@@ -201,14 +201,14 @@
     
     async function saveToCloud() {
         if(!userAuthId) return;
-        await supabase.from('gacha_data').update({
+        await supabaseClient.from('gacha_data').update({
             hopium: userData.hopium, pity: userData.pity, crush_type: userData.crushType,
             quest_date: userData.questDate, completed_quests: userData.completedQuests, history: userData.history
         }).eq('id', userAuthId);
     }
 
     async function logout() {
-        await supabase.auth.signOut();
+        await supabaseClient.auth.signOut();
         location.reload(); // Quick reset of the UI state
     }
 
@@ -293,7 +293,7 @@
         const board = document.getElementById('leaderboardLog');
         board.innerHTML = "Fetching global despair data...";
         // Pull top 10 users with the highest pity
-        let { data: users, error } = await supabase.from('gacha_data').select('email, pity').order('pity', { ascending: false }).limit(10);
+        let { data: users, error } = await supabaseClient.from('gacha_data').select('email, pity').order('pity', { ascending: false }).limit(10);
         
         if (error) return board.innerHTML = "Failed to load leaderboard.";
         if (!users || users.length === 0) return board.innerHTML = "No users yet.";
