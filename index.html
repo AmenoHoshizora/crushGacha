@@ -9,19 +9,16 @@
     :root { --bg-color: #1a1a2e; }
     body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; min-height: 100vh; background-color: var(--bg-color); color: #e94560; margin: 0; padding: 20px; box-sizing: border-box; transition: background-color 1s ease; }
     
-    /* Responsive Containers */
     .container { background: #16213e; padding: 25px; border-radius: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); max-width: 500px; width: 100%; margin-bottom: 20px; text-align: center; box-sizing: border-box; }
     h1 { margin-top: 0; color: #fff; font-size: 24px; }
     h2 { color: #fff; font-size: 18px; margin-bottom: 15px; border-bottom: 2px solid #0f3460; padding-bottom: 10px;}
     
-    /* Inputs & Buttons */
-    input[type="email"], input[type="password"] { width: 100%; padding: 12px; margin: 10px 0; border-radius: 5px; border: 1px solid #e94560; background: #1a1a2e; color: white; box-sizing: border-box; font-size: 16px; }
+    input[type="email"], input[type="password"], input[type="text"] { width: 100%; padding: 12px; margin: 10px 0; border-radius: 5px; border: 1px solid #e94560; background: #1a1a2e; color: white; box-sizing: border-box; font-size: 16px; }
     button { background-color: #e94560; color: white; border: none; padding: 12px 20px; font-size: 16px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: background 0.2s; width: 100%; margin-top: 10px; box-sizing: border-box; }
     button:hover { background-color: #d13d56; }
     button:disabled { background-color: #555; cursor: not-allowed; }
     button.secondary { background-color: #0f3460; border: 1px solid #e94560; }
     
-    /* Header & Tabs */
     .user-header { display: flex; justify-content: space-between; align-items: center; background: #0f3460; padding: 10px 15px; border-radius: 10px; margin-bottom: 20px; color: white; width: 100%; max-width: 500px; box-sizing: border-box;}
     .currency-badge { background: #e94560; padding: 5px 10px; border-radius: 8px; font-weight: bold; display: flex; align-items: center; gap: 5px;}
     .nav-tabs { display: flex; gap: 5px; margin-bottom: 15px; width: 100%; max-width: 500px; }
@@ -31,7 +28,6 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    /* Wheel */
     .wheel-container { position: relative; width: 240px; height: 240px; margin: 20px auto; }
     .pointer { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 15px solid transparent; border-right: 15px solid transparent; border-top: 30px solid #fff; z-index: 10; }
     .wheel { width: 100%; height: 100%; border-radius: 50%; background: conic-gradient(#4ade80 0% 0.6%, #e94560 0.6% 100%); border: 4px solid #fff; box-sizing: border-box; transition: transform 4s cubic-bezier(0.17, 0.67, 0.12, 0.99); }
@@ -39,7 +35,6 @@
     .golden-glow { background: #3a2a00 !important; border: 2px solid #ffd700; animation: goldenPulse 2s infinite; color: #ffd700; }
     @keyframes goldenPulse { 0% { box-shadow: 0 0 10px #ffd700; } 50% { box-shadow: 0 0 25px #ffdf00; } 100% { box-shadow: 0 0 10px #ffd700; } }
 
-    /* Layout Elements */
     .btn-group { display: flex; gap: 10px; flex-wrap: wrap; }
     .btn-group button { flex: 1; min-width: 140px; margin-top: 0; }
     
@@ -51,7 +46,6 @@
     .win-text { color: #4ade80; font-weight: bold; }
     .lose-text { color: #e94560; }
 
-    /* --- MOBILE RESPONSIVENESS --- */
     @media (max-width: 480px) {
         body { padding: 10px; }
         .container { padding: 15px; margin-bottom: 15px; }
@@ -70,6 +64,7 @@
 <div id="authScreen" class="container" style="display: block;">
     <h1>The Crush Gacha</h1>
     <p style="color: white; font-size: 14px;">Log in or create an account to sync your despair globally.</p>
+    <input type="text" id="usernameInput" placeholder="Username (Required for new accounts)...">
     <input type="email" id="emailInput" placeholder="Email...">
     <input type="password" id="passInput" placeholder="Password (min 6 chars)...">
     <button onclick="handleAuth('login')">Log In</button>
@@ -85,7 +80,7 @@
 
 <div id="mainApp">
     <div class="user-header">
-        <div style="font-size: 12px;">User: <strong id="displayEmail" style="color: #4ade80; font-size: 14px;"></strong></div>
+        <div style="font-size: 12px;">User: <strong id="displayUsername" style="color: #4ade80; font-size: 14px;"></strong></div>
         <div style="display: flex; gap: 10px; align-items: center;">
             <div class="currency-badge">💎 <span id="hopiumDisplay">0</span></div>
             <button onclick="logout()" style="width: auto; padding: 5px 10px; font-size: 12px; margin:0; background: transparent; border: 1px solid #e94560;">Logout</button>
@@ -140,9 +135,8 @@
     const SOFT_PITY_START = 700;
     
     let userAuthId = null;
-    let userData = { email: '', hopium: 160, pity: 0, crushType: null, questDate: '', completedQuests: {}, history: [] };
+    let userData = { username: '', email: '', hopium: 160, pity: 0, crushType: null, questDate: '', completedQuests: {}, history: [] };
     let currentRotation = 0; 
-    let audioCtx = null;
 
     const questsConfig = {
         local: [
@@ -159,13 +153,6 @@
         ]
     };
 
-    // --- Audio System ---
-    function initAudio() { if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
-    function playBeep(freq, type, duration) { if(!audioCtx) return; const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain(); osc.type = type; osc.frequency.value = freq; osc.connect(gain); gain.connect(audioCtx.destination); osc.start(); gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration); osc.stop(audioCtx.currentTime + duration); }
-    function playTick() { playBeep(800, 'sine', 0.1); }
-    function playLose() { setTimeout(()=>playBeep(200, 'sawtooth', 0.5), 0); setTimeout(()=>playBeep(150, 'sawtooth', 0.8), 200); }
-    function playWin() { [523.25, 659.25, 783.99, 1046.50].forEach((freq, i) => setTimeout(() => playBeep(freq, 'square', 0.5), i * 150)); }
-
     function switchTab(tabId) {
         document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
         document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
@@ -173,12 +160,14 @@
         event.target.classList.add('active');
     }
 
-    // --- Cloud Auth & DB Logic ---
     async function handleAuth(type) {
+        const username = document.getElementById('usernameInput').value.trim();
         const email = document.getElementById('emailInput').value.trim();
         const password = document.getElementById('passInput').value;
         const msg = document.getElementById('authMessage');
+        
         if(!email || !password) return msg.innerText = "Please enter email and password.";
+        if(type === 'signup' && !username) return msg.innerText = "Please enter a username to sign up.";
         
         msg.innerText = "Connecting to universe...";
         
@@ -191,20 +180,18 @@
         userAuthId = authRes.data.user.id;
         userData.email = authRes.data.user.email;
 
-        // Fetch or create profile
         let { data: profile, error } = await supabaseClient.from('gacha_data').select('*').eq('id', userAuthId).single();
         
         if (!profile) {
-            // New User Setup
-            profile = { id: userAuthId, email: userData.email, hopium: 160, pity: 0, crush_type: null, quest_date: new Date().toDateString(), completed_quests: {}, history: [] };
+            profile = { id: userAuthId, username: username, email: userData.email, hopium: 160, pity: 0, crush_type: null, quest_date: new Date().toDateString(), completed_quests: {}, history: [] };
             await supabaseClient.from('gacha_data').insert([profile]);
         }
 
-        // Map DB snake_case to JS camelCase
+        // Handle existing test accounts that might not have a username yet
+        userData.username = profile.username || profile.email.split('@')[0];
         userData.hopium = profile.hopium; userData.pity = profile.pity; userData.crushType = profile.crush_type;
         userData.questDate = profile.quest_date; userData.completedQuests = profile.completed_quests || {}; userData.history = profile.history || [];
 
-        // Daily Check-in Reset
         const today = new Date().toDateString();
         if (userData.questDate !== today) {
             userData.completedQuests = {}; userData.questDate = today; userData.hopium += 160;
@@ -225,7 +212,7 @@
     async function saveToCloud() {
         if(!userAuthId) return;
         await supabaseClient.from('gacha_data').update({
-            hopium: userData.hopium, pity: userData.pity, crush_type: userData.crushType,
+            username: userData.username, hopium: userData.hopium, pity: userData.pity, crush_type: userData.crushType,
             quest_date: userData.questDate, completed_quests: userData.completedQuests, history: userData.history
         }).eq('id', userAuthId);
     }
@@ -235,11 +222,10 @@
         location.reload(); 
     }
 
-    // --- App Init ---
     function initApp() {
         document.getElementById('setupScreen').style.display = 'none';
         document.getElementById('mainApp').style.display = 'block';
-        document.getElementById('displayEmail').innerText = userData.email.split('@')[0];
+        document.getElementById('displayUsername').innerText = userData.username;
         updateUI(); renderQuests(); renderHistory();
     }
 
@@ -270,7 +256,6 @@
     }
 
     function spin(bannerType) {
-        initAudio();
         const cost = bannerType === 'event' ? 320 : 160;
         if (userData.hopium < cost) return alert("Not enough Hopium! Do your daily quests.");
         
@@ -289,15 +274,13 @@
         currentRotation += (360 * 5) + landingDegree - (currentRotation % 360);
         wheel.style.transform = `rotate(${currentRotation}deg)`;
 
-        let ticks = 0; let tickInterval = setInterval(() => { playTick(); ticks++; if(ticks > 15) clearInterval(tickInterval); }, 200);
-
         setTimeout(async () => {
             const time = new Date().toLocaleTimeString();
             if (isWin) {
-                playWin(); resultBox.innerText = "🌟 YOU SHOULD CONFESS! 🌟"; resultBox.classList.add('golden-glow');
+                resultBox.innerText = "🌟 YOU SHOULD CONFESS! 🌟"; resultBox.classList.add('golden-glow');
                 userData.history.unshift({ text: `WIN at ${userData.pity} pity!`, class: 'win-text', time: time }); userData.pity = 0; 
             } else {
-                playLose(); resultBox.innerText = "You shouldn't confess.";
+                resultBox.innerText = "You shouldn't confess.";
                 userData.history.unshift({ text: `Lost at ${userData.pity} pity.`, class: 'lose-text', time: time });
             }
             if(userData.history.length > 50) userData.history.pop();
@@ -316,15 +299,14 @@
         const board = document.getElementById('leaderboardLog');
         board.innerHTML = "Fetching global despair data...";
         
-        let { data: users, error } = await supabaseClient.from('gacha_data').select('email, pity').order('pity', { ascending: false }).limit(10);
+        let { data: users, error } = await supabaseClient.from('gacha_data').select('username, email, pity').order('pity', { ascending: false }).limit(10);
         
         if (error) return board.innerHTML = "Failed to load leaderboard.";
         if (!users || users.length === 0) return board.innerHTML = "No users yet.";
         
         board.innerHTML = users.map((u, i) => {
-            let name = u.email.split('@')[0];
-            let display = name.substring(0, 3) + "***"; 
-            if(u.email === userData.email) display = `<span style="color:#4ade80">${name} (You)</span>`;
+            let display = u.username || u.email.split('@')[0];
+            if(u.email === userData.email) display = `<span style="color:#4ade80">${display} (You)</span>`;
             return `<div class="log-entry"><span>#${i+1} ${display}</span> <span style="color:#e94560">${u.pity} Pity</span></div>`;
         }).join('');
     }
